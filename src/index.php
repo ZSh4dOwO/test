@@ -440,18 +440,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['action']) && $_POST['action'] === 'login') {
         $email = trim($_POST['email'] ?? '');
         $password = trim($_POST['password'] ?? '');
+        $remember = isset($_POST['remember']);
 
         if ($email === '' || $password === '') {
-            flash('Veuillez renseigner l\’email et le mot de passe.');
+            flash('Veuillez renseigner l\'email et le mot de passe.');
             header('Location: index.php');
             exit;
         }
 
         try {
-            if (authenticateUser($email, $password)) {
-                $_SESSION['user_email'] = $email;
+            $user = authenticateUser($email, $password);
+
+            if ($user) {
+                $_SESSION['user_email'] = $user['email'];
+                $_SESSION['user_id'] = $user['id'];
+
+                if ($remember) {
+                    createRememberMeToken((int)$user['id']);
+                }
+
                 flash('Connexion réussie.');
-                header('Location: index.php?page=pathologies');
+                header('Location: index.php?page=accueil');
                 exit;
             }
         } catch (Exception $e) {
@@ -463,43 +472,56 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
-    if (isset($_POST['action']) && $_POST['action'] === 'login') {
-    $email = trim($_POST['email'] ?? '');
-    $password = trim($_POST['password'] ?? '');
-    $remember = isset($_POST['remember']);
+    if (isset($_POST['action']) && $_POST['action'] === 'register') {
+        $email = trim($_POST['email'] ?? '');
+        $password = trim($_POST['password'] ?? '');
+        $confirm = trim($_POST['confirm'] ?? '');
 
-    if ($email === '' || $password === '') {
-        flash("Veuillez renseigner l'email et le mot de passe.");
-        header('Location: index.php');
-        exit;
-    }
-
-    try {
-        $user = authenticateUser($email, $password);
-
-        if ($user) {
-            $_SESSION['user_email'] = $user['email'];
-            $_SESSION['user_id'] = $user['id'];
-
-            if ($remember) {
-                createRememberMeToken((int)$user['id']);
-            }
-
-            flash('Connexion réussie.');
-            header('Location: index.php?page=pathologies');
+        if ($email === '' || $password === '' || $confirm === '') {
+            flash('Veuillez remplir tous les champs.');
+            header('Location: index.php?page=inscription');
             exit;
         }
-    } catch (Exception $e) {
-        // ignore
+
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            flash('Adresse email invalide.');
+            header('Location: index.php?page=inscription');
+            exit;
+        }
+
+        if (strlen($password) < 8) {
+            flash('Le mot de passe doit contenir au moins 8 caractères.');
+            header('Location: index.php?page=inscription');
+            exit;
+        }
+
+        if ($password !== $confirm) {
+            flash('Les mots de passe ne correspondent pas.');
+            header('Location: index.php?page=inscription');
+            exit;
+        }
+
+        try {
+            if (registerUser($email, $password)) {
+                $user = authenticateUser($email, $password);
+                if ($user) {
+                    $_SESSION['user_email'] = $user['email'];
+                    $_SESSION['user_id'] = $user['id'];
+                }
+                flash('Inscription réussie ! Bienvenue.');
+                header('Location: index.php?page=accueil');
+                exit;
+            } else {
+                flash('Un compte avec cet email existe déjà.');
+                header('Location: index.php?page=inscription');
+                exit;
+            }
+        } catch (Exception $e) {
+            flash('Erreur lors de l\'inscription. Veuillez réessayer.');
+            header('Location: index.php?page=inscription');
+            exit;
+        }
     }
-
-    flash('Identifiants invalides.');
-    header('Location: index.php');
-    exit;
-}
-
-
-
 
     if (isset($_POST['action']) && $_POST['action'] === 'logout') {
         if (!empty($_COOKIE['remember_me'])) {
