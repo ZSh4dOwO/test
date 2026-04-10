@@ -2,10 +2,12 @@
 
 ini_set('session.cookie_lifetime', 0); // Cookie valide jusqu'à fermeture du navigateur
 ini_set('session.gc_maxlifetime', 3600); // Session valide 1h côté serveur
+$isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+        || (!empty($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https');
 session_set_cookie_params([
     'lifetime' => 0,
     'path'     => '/',
-    'secure'   => false, // true si HTTPS
+    'secure'   => $isHttps,
     'httponly' => true,
     'samesite' => 'Lax',
 ]);
@@ -56,7 +58,8 @@ function ensureUserTable(): void
     $stmt->execute([':email' => 'admin@aaa.local']);
 
     if (!$stmt->fetch()) {
-        $passwordHash = password_hash('Acupuncture123!', PASSWORD_DEFAULT);
+        $defaultAdminPassword = getenv('DEFAULT_ADMIN_PASSWORD') ?: 'Acupuncture123!';
+        $passwordHash = password_hash($defaultAdminPassword, PASSWORD_DEFAULT);
         $insert = $pdo->prepare('INSERT INTO app_user (email, password) VALUES (:email, :password)');
         $insert->execute([
             ':email' => 'admin@aaa.local',
@@ -105,6 +108,22 @@ function currentUser(): ?string
 function isAuthenticated(): bool
 {
     return currentUser() !== null;
+}
+
+function generateCsrfToken(): string
+{
+    if (empty($_SESSION['csrf_token'])) {
+        $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+    }
+    return $_SESSION['csrf_token'];
+}
+
+function validateCsrfToken(?string $token): bool
+{
+    if (empty($_SESSION['csrf_token']) || empty($token)) {
+        return false;
+    }
+    return hash_equals($_SESSION['csrf_token'], $token);
 }
 
 function flash(string $message): void
@@ -302,10 +321,19 @@ function searchPathoByKeyword(string $term): array
 try {
     ensureUserTable();
 } catch (Exception $e) {
-        // ignore
+    error_log('ensureUserTable failed: ' . $e->getMessage());
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $csrfToken = $_POST['csrf_token'] ?? '';
+    if (!validateCsrfToken($csrfToken)) {
+        flash('Session expirée, veuillez réessayer.');
+        header('Location: index.php');
+        exit;
+    }
+    // Regenerate CSRF token after successful validation
+    unset($_SESSION['csrf_token']);
+
     if (isset($_POST['action']) && $_POST['action'] === 'register') {
         $email = trim($_POST['email'] ?? '');
         $password = trim($_POST['password'] ?? '');
@@ -337,6 +365,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         try {
             if (registerUser($email, $password)) {
+                session_regenerate_id(true);
                 $_SESSION['user_email'] = $email;
                 flash("Inscription réussie, bienvenue !");
                 header('Location: index.php?page=pathologies');
@@ -364,13 +393,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         try {
             if (authenticateUser($email, $password)) {
+                session_regenerate_id(true);
                 $_SESSION['user_email'] = $email;
                 flash('Connexion réussie.');
                 header('Location: index.php?page=pathologies');
                 exit;
             }
         } catch (Exception $e) {
-            // ignore
+            error_log('Authentication error: ' . $e->getMessage());
         }
 
         flash('Identifiants invalides.');
@@ -395,6 +425,7 @@ $params = [
     'isAuthenticated' => isAuthenticated(),
     'userEmail' => currentUser(),
     'flashMessage' => $flashMessage,
+    'csrfToken' => generateCsrfToken(),
 ];
 
 switch ($page) {

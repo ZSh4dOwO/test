@@ -1,0 +1,5 @@
+# Environment variables (contains credentials)
+.env
+
+# PHP dependencies (install via composer install)
+vendor/

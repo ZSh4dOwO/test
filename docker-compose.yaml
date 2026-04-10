@@ -12,6 +12,7 @@ services:
       DB_USER: ${POSTGRES_PHP_USER}
       DB_PASSWORD: ${POSTGRES_PHP_PASSWORD}
       DB_DB: ${POSTGRES_DB_NAME}
+      DEFAULT_ADMIN_PASSWORD: ${DEFAULT_ADMIN_PASSWORD:-Acupuncture123!}
     volumes:
       - ./src:/var/www/html
       - ./vendor:/var/www/vendor

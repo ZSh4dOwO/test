@@ -7,23 +7,6 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <nav class="nav-container" aria-label="Navigation principale">
-        <div class="nav-content">
-            <a href="index.php" class="logo" aria-label="AAA - Retour à l'accueil">AAA<span>.</span></a>
-            
-            <div class="nav-links" role="menubar">
-                <a role="menuitem" href="index.php" class="{{ currentPage == 'accueil' ? 'active' : '' }}">Accueil</a>
-                <a role="menuitem" href="index.php?page=pathologies" class="{{ currentPage == 'pathologies' ? 'active' : '' }}">Pathologies</a>
-                
-                {% if isAuthenticated %}
-                    <button role="menuitem" class="btn-login" type="submit">Déconnexion</button>
-                {% else %}
-                    <a role="menuitem" class="btn-login" href="index.php?page=inscription">S'inscrire</a>
-                    <button role="menuitem" class="btn-login" onclick="openModal()" aria-haspopup="dialog" aria-controls="login-modal">Connexion</button>
-                {% endif %}
-            </div>
-        </div>
-    </nav>
     <a href="#main-content" class="skip-link">Aller au contenu</a>
     <nav class="nav-container" aria-label="Navigation principale">
         <div class="nav-content">
@@ -34,6 +17,7 @@
                 {% if isAuthenticated %}
                     <form method="post" style="display:inline;" aria-label="Déconnexion">
                         <input type="hidden" name="action" value="logout">
+                        <input type="hidden" name="csrf_token" value="{{ csrfToken }}">
                         <button class="btn-login" type="submit">Déconnexion ({{ userEmail }})</button>
                     </form>
                 {% else %}
@@ -64,6 +48,7 @@
             <h2 id="modal-title">Connexion</h2>
             <form method="post" action="index.php" aria-label="Formulaire de connexion">
                 <input type="hidden" name="action" value="login">
+                <input type="hidden" name="csrf_token" value="{{ csrfToken }}">
                 <div class="form-group"><label for="login-email">Email</label><input type="email" id="login-email" name="email" required></div>
                 <div class="form-group"><label for="login-password">Mot de passe</label><input type="password" id="login-password" name="password" required></div>
                 <button type="submit" class="btn-submit">Se connecter</button>
