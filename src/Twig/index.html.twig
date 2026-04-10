@@ -1,0 +1,77 @@
+{% extends "base.html.twig" %}
+
+{% block body %}
+<section class="hero">
+    <div class="container">
+        <h1 class="l1-title">L'acupuncture accessible à tous.</h1>
+        <p class="hero-intro">L'Association des Acupuncteurs soucieux de l'Accessibilité (AAA) conjugue savoirs ancestraux et clarté moderne.</p>
+        
+        {# On ajoute role="search" pour les lecteurs d'écran #}
+        <form class="search-wrapper" action="index.php" method="get" role="search" aria-label="Recherche par mot-clé">
+            <input type="hidden" name="page" value="accueil">
+            
+            {# Le label est caché visuellement par .sr-only mais lu par les machines #}
+            <label for="search-input" class="sr-only">Rechercher une pathologie ou un symptôme</label>
+            <input 
+                type="text" 
+                id="search-input" 
+                name="keyword" 
+                class="search-input" 
+                placeholder="Rechercher une pathologie ou symptôme..." 
+                value="{{ keyword|default('') }}"
+            >
+            <button type="submit" class="btn-primary">Rechercher</button>
+        </form>
+    </div>
+</section>
+
+{% if keyword and searchResults is not empty %}
+    <section class="featured-results">
+        <div class="container">
+            <h2 class="section-label">Résultats de recherche pour « {{ keyword }} »</h2>
+            <div class="grid">
+                {% for patho in searchResults %}
+                    <article class="patho-card">
+                        <h3>{{ patho.patho_desc }}</h3>
+                        <p>Type : {{ patho.type }}, Méridien : {{ patho.mer_nom }}</p>
+
+                        {% if patho.symptoms %}
+                            <p class="symptoms"><strong>Symptômes :</strong> {{ patho.symptoms }}</p>
+                        {% endif %}
+
+                        {# Un lien clair pour la navigation Tab + Entrée #}
+                        <a class="details-link" href="index.php?page=patho&id={{ patho.idp }}" aria-label="Voir les détails de {{ patho.patho_desc }}">
+                            Voir les détails
+                        </a>
+                    </article>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+{% elseif keyword %}
+    <section class="featured-results">
+        <div class="container">
+            <p role="status">Aucun résultat pour « {{ keyword }} »</p>
+        </div>
+    </section>
+{% else %}
+    <section class="featured-results">
+        <div class="container">
+            <h2 class="section-label">Pathologies</h2>
+            <div class="grid">
+                {% for patho in homePathologies|slice(0, 12) %}
+                    <article class="patho-card">
+                        <h3>{{ patho.patho_desc }}</h3>
+                        <p> - Type : {{ patho.type }} <br> - Méridien : {{ patho.mer_nom }}</p>
+                        <a href="index.php?page=patho&id={{ patho.idp }}" class="details-link" aria-label="Voir détail de {{ patho.patho_desc }}">
+                            Voir détail
+                        </a>
+                    </article>
+                {% else %}
+                    <p>Aucune pathologie disponible.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+{% endif %}
+{% endblock %}
