@@ -12,6 +12,13 @@ session_set_cookie_params([
     'samesite' => 'Lax',
 ]);
 session_start();
+
+// Security headers
+header('X-Content-Type-Options: nosniff');
+header('X-Frame-Options: DENY');
+header('Referrer-Policy: strict-origin-when-cross-origin');
+header('Permissions-Policy: camera=(), microphone=(), geolocation=()');
+header("Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self';");
 require_once __DIR__ . '/../vendor/autoload.php';
 
 $loader = new \Twig\Loader\FilesystemLoader(__DIR__ . '/Twig');
@@ -54,15 +61,17 @@ function ensureUserTable(): void
         )'
     );
 
+    $adminEmail = getenv('APP_ADMIN_EMAIL') ?: 'admin@aaa.local';
+    $adminPassword = getenv('APP_ADMIN_PASSWORD') ?: 'Acupuncture123!';
+
     $stmt = $pdo->prepare('SELECT 1 FROM app_user WHERE email = :email');
-    $stmt->execute([':email' => 'admin@aaa.local']);
+    $stmt->execute([':email' => $adminEmail]);
 
     if (!$stmt->fetch()) {
-        $defaultAdminPassword = getenv('DEFAULT_ADMIN_PASSWORD') ?: 'Acupuncture123!';
-        $passwordHash = password_hash($defaultAdminPassword, PASSWORD_DEFAULT);
+        $passwordHash = password_hash($adminPassword, PASSWORD_DEFAULT);
         $insert = $pdo->prepare('INSERT INTO app_user (email, password) VALUES (:email, :password)');
         $insert->execute([
-            ':email' => 'admin@aaa.local',
+            ':email' => $adminEmail,
             ':password' => $passwordHash
         ]);
     }
@@ -321,12 +330,11 @@ function searchPathoByKeyword(string $term): array
 try {
     ensureUserTable();
 } catch (Exception $e) {
-    error_log('ensureUserTable failed: ' . $e->getMessage());
+    error_log('DB init error: ' . $e->getMessage());
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $csrfToken = $_POST['csrf_token'] ?? '';
-    if (!validateCsrfToken($csrfToken)) {
+    if (!validateCsrfToken($_POST['csrf_token'] ?? null)) {
         flash('Session expirée, veuillez réessayer.');
         header('Location: index.php');
         exit;
@@ -400,7 +408,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 exit;
             }
         } catch (Exception $e) {
-            error_log('Authentication error: ' . $e->getMessage());
+            error_log('Login error: ' . $e->getMessage());
         }
 
         flash('Identifiants invalides.');
@@ -420,12 +428,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $page = $_GET['page'] ?? 'accueil';
 $flashMessage = getFlash();
 
+$csrfToken = generateCsrfToken();
+
 $params = [
     'currentPage' => $page,
     'isAuthenticated' => isAuthenticated(),
     'userEmail' => currentUser(),
     'flashMessage' => $flashMessage,
-    'csrfToken' => generateCsrfToken(),
+    'csrfToken' => $csrfToken,
 ];
 
 switch ($page) {
