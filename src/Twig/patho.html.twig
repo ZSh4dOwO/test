@@ -4,7 +4,7 @@
 <section class="hero">
     <div class="container">
         <h1 class="l1-title">Détails de la pathologie</h1>
-        <p class="hero-intro">{{ patho.desc }} (Type {{ patho.type }}, Méridien {{ patho.mer_nom }})</p>
+        <p class="hero-intro">{{ patho.patho_desc }} (Type {{ patho.type }}, Méridien {{ patho.mer_nom }})</p>
         <p><a href="index.php?page=pathologies">← Retour à la liste des pathologies</a></p>
     </div>
 </section>
@@ -15,7 +15,7 @@
         {% if patho.symptoms is not empty %}
             <ul class="symptom-list">
                 {% for symptom in patho.symptoms %}
-                    <li>{{ symptom.desc }} {% if symptom.aggr %}(aggravation){% endif %}</li>
+                    <li>{{ symptom.symptom_desc }} {% if symptom.aggr %}(aggravation){% endif %}</li>
                 {% endfor %}
             </ul>
         {% else %}

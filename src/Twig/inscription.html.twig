@@ -11,10 +11,6 @@
 <section class="featured-results">
     <div class="container">
 
-        {% if flashMessage %}
-            <p class="flash-message">{{ flashMessage }}</p>
-        {% endif %}
-
         <form class="search-wrapper" action="index.php" method="post" aria-label="Formulaire d'inscription" style="flex-direction: column; align-items: stretch; gap: 1rem;">
             <input type="hidden" name="action" value="register">
             <input type="hidden" name="csrf_token" value="{{ csrfToken }}">
