@@ -7,8 +7,8 @@ RUN apt-get update && apt-get install -y libpq-dev postgresql-client && \
     docker-php-ext-install pdo_pgsql && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Activer le module de réécriture d'URL
-RUN a2enmod rewrite
+# Activer le module de réécriture d'URL et les headers de sécurité
+RUN a2enmod rewrite headers
 
 # Ajouter configuration PHP custom
 COPY conf/php/custom-php.ini /usr/local/etc/php/conf.d/custom-php.ini

@@ -2,10 +2,12 @@
 
 ini_set('session.cookie_lifetime', 0); // Cookie valide jusqu'à fermeture du navigateur
 ini_set('session.gc_maxlifetime', 3600); // Session valide 1h côté serveur
+$isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+        || (!empty($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https');
 session_set_cookie_params([
     'lifetime' => 0,
     'path'     => '/',
-    'secure'   => (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on'),
+    'secure'   => $isHttps,
     'httponly' => true,
     'samesite' => 'Lax',
 ]);
@@ -117,6 +119,22 @@ function isAuthenticated(): bool
     return currentUser() !== null;
 }
 
+function generateCsrfToken(): string
+{
+    if (empty($_SESSION['csrf_token'])) {
+        $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+    }
+    return $_SESSION['csrf_token'];
+}
+
+function validateCsrfToken(?string $token): bool
+{
+    if (empty($_SESSION['csrf_token']) || empty($token)) {
+        return false;
+    }
+    return hash_equals($_SESSION['csrf_token'], $token);
+}
+
 function flash(string $message): void
 {
     $_SESSION['flash_message'] = $message;
@@ -132,22 +150,6 @@ function getFlash(): ?string
     unset($_SESSION['flash_message']);
 
     return $message;
-}
-
-function generateCsrfToken(): string
-{
-    if (empty($_SESSION['csrf_token'])) {
-        $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
-    }
-    return $_SESSION['csrf_token'];
-}
-
-function validateCsrfToken(?string $token): bool
-{
-    if (empty($token) || empty($_SESSION['csrf_token'])) {
-        return false;
-    }
-    return hash_equals($_SESSION['csrf_token'], $token);
 }
 
 function getFilters(): array
@@ -337,6 +339,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         header('Location: index.php');
         exit;
     }
+    // Regenerate CSRF token after successful validation
+    unset($_SESSION['csrf_token']);
 
     if (isset($_POST['action']) && $_POST['action'] === 'register') {
         $email = trim($_POST['email'] ?? '');
