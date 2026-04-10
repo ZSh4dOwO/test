@@ -1,0 +1,122 @@
+{% extends "base.html.twig" %}
+
+{% block body %}
+<section class="hero">
+    <div class="container">
+        <h1 class="l1-title">L'acupuncture accessible à tous.</h1>
+        
+        <div class="search-container-dual">
+            {# Formulaire 1 : Recherche par mot-clé #}
+            <form class="search-wrapper" action="index.php" method="get" role="search">
+                <input type="hidden" name="page" value="accueil">
+                <label for="search-input" class="sr-only">Rechercher par mot-clé</label>
+                <input type="text" id="search-input" name="keyword" class="search-input" placeholder="Ex: Migraine, Dos..." value="{{ keyword|default('') }}">
+                <button type="submit" class="btn-primary">Rechercher</button>
+            </form>
+
+            <span class="search-divider">OU</span>
+
+            {# Formulaire 2 : Recherche par filtres #}
+            <form class="search-wrapper" action="index.php" method="get">
+                <input type="hidden" name="page" value="accueil">
+                
+                <label for="type-filter" class="sr-only">Type</label>
+                <select id="type-filter" name="type" class="search-input" style="flex: 1;">
+                    <option value="all">Tous les types</option>
+                    {% for type in filters.types %}
+                        <option value="{{ type }}" {% if selectedType == type %}selected{% endif %}>{{ type }}</option>
+                    {% endfor %}
+                </select>
+
+                <label for="mer-filter" class="sr-only">Méridien</label>
+                <select id="mer-filter" name="mer" class="search-input" style="flex: 1;">
+                    <option value="all">Tous les méridiens</option>
+                    {% for mer in filters.meridians %}
+                        <option value="{{ mer.code }}" {% if selectedMer == mer.code %}selected{% endif %}>{{ mer.nom }}</option>
+                    {% endfor %}
+                </select>
+
+                <button type="submit" class="btn-primary">Filtrer</button>
+            </form>
+        </div>
+    </div>
+</section>
+
+{% if keyword and searchResults is not empty %}
+    <section class="featured-results">
+        <div class="container">
+            <h2 class="section-label">Résultats de recherche pour « {{ keyword }} »</h2>
+            <div class="grid">
+                {# --- BLOC À UTILISER POUR LES RÉSULTATS DE RECHERCHE --- #}
+                {% for patho in searchResults %}
+                    <article class="patho-card">
+                        <h3>{{ patho.patho_desc }}</h3>
+                        <p><strong>Type :</strong> {{ patho.type }}</p>
+                        <p><strong>Méridien :</strong> {{ patho.mer_nom }}</p>
+                        
+                        {# On ne met plus les symptômes ici pour garder la carte courte #}
+                        
+                        <a class="details-link" href="index.php?page=patho&id={{ patho.idp }}" aria-label="Voir les détails de {{ patho.patho_desc }}">
+                            Voir les détails
+                        </a>
+                    </article>
+                {% endfor %}
+
+                {# --- MÊME CHOSE POUR LES PATHOLOGIES PAR DÉFAUT --- #}
+                {% for patho in homePathologies|slice(0, 12) %}
+                    <article class="patho-card">
+                        <h3>{{ patho.patho_desc }}</h3>
+                        <p><strong>Type :</strong> {{ patho.type }}</p>
+                        <p><strong>Méridien :</strong> {{ patho.mer_nom }}</p>
+
+                        <a class="details-link" href="index.php?page=patho&id={{ patho.idp }}" aria-label="Voir les détails de {{ patho.patho_desc }}">
+                            Voir les détails
+                        </a>
+                    </article>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+{% elseif keyword %}
+    <section class="featured-results">
+        <div class="container">
+            <p role="status">Aucun résultat pour « {{ keyword }} »</p>
+        </div>
+    </section>
+{% else %}
+    <section class="featured-results">
+        <div class="container">
+            <h2 class="section-label">Pathologies</h2>
+            <div class="grid">
+                {# --- BLOC À UTILISER POUR LES RÉSULTATS DE RECHERCHE --- #}
+                {% for patho in searchResults %}
+                    <article class="patho-card">
+                        <h3>{{ patho.patho_desc }}</h3>
+                        <p><strong>Type :</strong> {{ patho.type }}</p>
+                        <p><strong>Méridien :</strong> {{ patho.mer_nom }}</p>
+                        
+                        {# On ne met plus les symptômes ici pour garder la carte courte #}
+                        
+                        <a class="details-link" href="index.php?page=patho&id={{ patho.idp }}" aria-label="Voir les détails de {{ patho.patho_desc }}">
+                            Voir les détails
+                        </a>
+                    </article>
+                {% endfor %}
+
+                {# --- MÊME CHOSE POUR LES PATHOLOGIES PAR DÉFAUT --- #}
+                {% for patho in homePathologies|slice(0, 12) %}
+                    <article class="patho-card">
+                        <h3>{{ patho.patho_desc }}</h3>
+                        <p><strong>Type :</strong> {{ patho.type }}</p>
+                        <p><strong>Méridien :</strong> {{ patho.mer_nom }}</p>
+
+                        <a class="details-link" href="index.php?page=patho&id={{ patho.idp }}" aria-label="Voir les détails de {{ patho.patho_desc }}">
+                            Voir les détails
+                        </a>
+                    </article>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+{% endif %}
+{% endblock %}

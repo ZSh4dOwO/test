@@ -1,0 +1,716 @@
+/* === Design Tokens === */
+:root {
+    --bg: #f9fafb;
+    --fg: #111827;
+    --primary: #0d9488;
+    --primary-hover: #0f766e;
+    --primary-light: #f0fdfa;
+    --muted: #6b7280;
+    --border-subtle: rgba(0, 0, 0, 0.06);
+    --radius-outer: 12px;
+    --radius-inner: 8px;
+    --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+    --shadow-md: 0 0 0 1px rgba(0,0,0,0.04), 0 2px 4px rgba(0,0,0,0.05), 0 12px 24px rgba(0,0,0,0.05);
+    --shadow-lg: 0 0 0 1px rgba(0,0,0,0.04), 0 4px 8px rgba(0,0,0,0.05), 0 20px 40px rgba(0,0,0,0.08);
+    --easing: cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+
+/* === Reset === */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background-color: var(--bg);
+    color: var(--fg);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+a { text-decoration: none; color: inherit; }
+ul { list-style: none; }
+img { max-width: 100%; display: block; }
+
+/* === Layout === */
+.container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 2rem;
+}
+
+/* === Navigation === */
+.nav-container {
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 1px 0 var(--border-subtle);
+}
+
+.nav-content {
+    max-width: 1100px;
+    margin: 0 auto;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 2rem;
+}
+
+.logo {
+    font-weight: 800;
+    font-size: 1.35rem;
+    letter-spacing: -0.03em;
+}
+
+.logo span { color: var(--primary); }
+
+.nav-links {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+}
+
+.nav-links a {
+    color: var(--muted);
+    font-size: 0.875rem;
+    font-weight: 500;
+    transition: color 0.2s;
+    padding: 0.25rem 0;
+    border-bottom: 2px solid transparent;
+}
+
+.nav-links a:hover,
+.nav-links a.active {
+    color: var(--fg);
+}
+
+.nav-links a.active {
+    border-bottom-color: var(--primary);
+}
+
+.btn-login {
+    /* Styles de base hérités de votre design */
+    background: var(--fg) !important;
+    color: white !important;
+    border-radius: var(--radius-inner);
+    border: none;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.875rem;
+    transition: opacity 0.2s;
+    border-bottom: none !important;
+
+    /* --- ALIGNEMENT ET TAILLE IDENTIQUE --- */
+    display: inline-flex;       /* Pour aligner parfaitement le texte au centre */
+    align-items: center;        /* Centrage vertical du texte */
+    justify-content: center;   /* Centrage horizontal du texte */
+    
+    /* On fixe une largeur et une hauteur communes */
+    width: 105px;               
+    height: 36px;               
+    padding: 0 !important;      /* On annule le padding pour que width/height dirigent tout */
+    
+    text-align: center;
+    text-decoration: none;      /* Important pour que le lien <a> ressemble au <button>  */
+    box-sizing: border-box;     /* Assure que la taille reste fixe même avec une bordure */
+}
+
+/* Effet au survol */
+.btn-login:hover {
+    opacity: 0.8;
+}
+
+/* Accessibilité : Style pour la navigation au clavier (Touche Tab) */
+.btn-login:focus-visible {
+    outline: 2px solid white;
+    outline-offset: -4px;
+}
+.btn-register {
+    background: var(--primary-light) !important;
+    color: var(--primary) !important;
+    padding: 0.5rem 1.15rem !important;
+    border-radius: var(--radius-inner);
+    border: 1px solid var(--primary) !important;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.875rem;
+    transition: all 0.2s;
+    text-decoration: none !important;
+    display: inline-block;
+}
+
+.btn-register:hover { 
+    background: var(--primary) !important;
+    color: white !important;
+}
+
+/* === Hero === */
+.hero {
+    padding: 5rem 0 3rem;
+    text-align: center;
+}
+
+.l1-title {
+    font-size: clamp(2rem, 5vw, 3.5rem);
+    font-weight: 800;
+    letter-spacing: -0.04em;
+    line-height: 1.1;
+    margin-bottom: 1.5rem;
+    text-wrap: balance;
+}
+
+.hero-intro {
+    font-size: 1.125rem;
+    color: var(--muted);
+    max-width: 640px;
+    margin: 0 auto 2.5rem;
+    text-wrap: pretty;
+    line-height: 1.7;
+}
+
+/* === Search === */
+.search-wrapper {
+    display: flex;
+    max-width: 620px;
+    margin: 0 auto;
+    gap: 0.5rem;
+    background: white;
+    padding: 0.5rem;
+    border-radius: 16px;
+    box-shadow: var(--shadow-md);
+}
+
+.search-input {
+    flex: 1;
+    border: none;
+    padding: 0 1rem;
+    font-size: 1rem;
+    outline: none;
+    background: transparent;
+    font-family: inherit;
+    color: var(--fg);
+}
+
+.search-input::placeholder { color: #9ca3af; }
+
+.btn-primary {
+    background: var(--primary);
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: var(--radius-inner);
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: background 0.2s;
+    font-family: inherit;
+}
+
+.btn-primary:hover { background: var(--primary-hover); }
+
+/* === Sections === */
+.section-label {
+    text-align: center;
+    font-size: 1.5rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--muted);
+    margin-bottom: 2rem;
+    font-weight: 700;
+}
+
+.page-header {
+    margin-bottom: 3rem;
+    padding-top: 3rem;
+}
+
+.page-header p {
+    color: var(--muted);
+    font-size: 1.1rem;
+    margin-top: 0.75rem;
+}
+
+.featured-results {
+    padding: 3rem 0 5rem;
+}
+
+/* === Grid === */
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+}
+
+/* === Cards === */
+.patho-card {
+    background: linear-gradient(180deg, #ffffff 0%, #fcfcfc 100%);
+    border-radius: 22px;
+    padding: 2rem 1.75rem;
+    position: relative;
+    overflow: hidden;
+    box-shadow:
+        0 10px 30px rgba(0, 0, 0, 0.06),
+        0 2px 8px rgba(0, 0, 0, 0.04);
+    border: 1px solid rgba(13, 148, 136, 0.08);
+    transition:
+        transform 0.25s ease,
+        box-shadow 0.25s ease,
+        border-color 0.25s ease;
+    cursor: pointer;
+}
+
+.patho-card strong {
+    color: #0f172a;
+    font-weight: 600;
+}
+
+.patho-card::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 5px;
+    background: linear-gradient(90deg, #0d9488, #5eead4);
+}
+
+.patho-card:hover {
+    transform: translateY(-8px);
+    box-shadow:
+        0 18px 40px rgba(0, 0, 0, 0.10),
+        0 6px 18px rgba(13, 148, 136, 0.08);
+    border-color: rgba(13, 148, 136, 0.20);
+}
+
+.patho-card h3 {
+    text-align: center;
+    font-size: 1.3rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    line-height: 1.3;
+    color: #0f172a;
+    margin-bottom: 1.2rem;
+    position: relative;
+    padding-bottom: 0.6rem;
+
+    text-transform: uppercase; /* 👉 majuscules */
+}
+
+.patho-card h3::after {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%); /* 👉 centre la ligne */
+    width: 50px;
+    height: 3px;
+    background: var(--primary);
+    border-radius: 2px;
+}
+
+.patho-card p {
+    font-size: 0.95rem;
+    color: #475569;
+    margin-bottom: 0.4rem;
+}
+
+.patho-card p::before {
+    content: "• ";
+    color: var(--primary);
+    font-weight: bold;
+}
+
+.details-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin-top: 0.8rem;
+    padding: 0.7rem 1rem;
+    border-radius: 10px;
+    background: var(--primary-light);
+    color: var(--primary);
+    font-weight: 700;
+    font-size: 0.95rem;
+    transition: all 0.2s ease;
+}
+
+.details-link:hover {
+    background: var(--primary);
+    color: white;
+    transform: translateX(3px);
+}
+
+/* === Treatment Reveal === */
+.treatment-reveal {
+    border-top: 1px solid var(--border-subtle);
+    padding-top: 1rem;
+    max-height: 0;
+    opacity: 0;
+    overflow: hidden;
+    transition: max-height 0.4s var(--easing), opacity 0.3s var(--easing), padding-top 0.3s;
+    padding-top: 0;
+}
+
+.patho-card:hover .treatment-reveal,
+.patho-card.is-open .treatment-reveal {
+    max-height: 300px;
+    opacity: 1;
+    padding-top: 1rem;
+}
+
+.treatment-reveal h4 {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.5rem;
+    color: var(--primary);
+    font-weight: 700;
+}
+
+.treatment-reveal p {
+    font-size: 0.875rem;
+    font-style: italic;
+    color: var(--fg);
+    line-height: 1.6;
+}
+
+.treatment-reveal ul {
+    padding-left: 1.2rem;
+    list-style: disc;
+}
+
+.treatment-reveal li {
+    font-size: 0.875rem;
+    margin-bottom: 0.25rem;
+    color: var(--fg);
+}
+
+/* === Locked State === */
+.is-locked .card-content {
+    position: relative;
+}
+
+.is-locked .card-inner {
+    filter: blur(5px);
+    pointer-events: none;
+    opacity: 0.4;
+    user-select: none;
+}
+
+.lock-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    padding: 2rem;
+    text-align: center;
+    z-index: 2;
+}
+
+.lock-overlay svg {
+    color: var(--muted);
+}
+
+.lock-overlay span {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--fg);
+}
+
+.lock-overlay .btn-small {
+    background: var(--primary);
+    color: white;
+    border: none;
+    padding: 0.4rem 1rem;
+    border-radius: var(--radius-inner);
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+    font-family: inherit;
+}
+
+.lock-overlay .btn-small:hover { background: var(--primary-hover); }
+
+/* === Login Modal === */
+.modal-backdrop {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(4px);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-backdrop.is-visible {
+    display: flex;
+}
+
+.modal {
+    background: white;
+    border-radius: var(--radius-outer);
+    padding: 2.5rem;
+    width: 100%;
+    max-width: 400px;
+    box-shadow: var(--shadow-lg);
+    position: relative;
+}
+
+.modal h2 {
+    font-size: 1.5rem;
+    font-weight: 800;
+    margin-bottom: 0.5rem;
+    letter-spacing: -0.02em;
+}
+
+.modal .modal-subtitle {
+    color: var(--muted);
+    font-size: 0.9rem;
+    margin-bottom: 1.5rem;
+}
+
+.form-group {
+    margin-bottom: 1rem;
+}
+
+.form-group label {
+    display: block;
+    font-size: 0.8rem;
+    font-weight: 600;
+    margin-bottom: 0.35rem;
+    color: var(--fg);
+}
+
+.form-group input {
+    width: 100%;
+    padding: 0.65rem 0.85rem;
+    border: 1px solid #d1d5db;
+    border-radius: var(--radius-inner);
+    font-size: 0.9rem;
+    font-family: inherit;
+    outline: none;
+    transition: border-color 0.2s;
+    color: var(--fg);
+}
+
+.form-group input:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.1);
+}
+
+.btn-submit {
+    width: 100%;
+    background: var(--primary);
+    color: white;
+    border: none;
+    padding: 0.75rem;
+    border-radius: var(--radius-inner);
+    font-weight: 600;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: background 0.2s;
+    font-family: inherit;
+    margin-top: 0.5rem;
+}
+
+.btn-submit:hover { background: var(--primary-hover); }
+
+.modal-close {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--muted);
+    padding: 0.25rem;
+    transition: color 0.2s;
+}
+
+.modal-close:hover { color: var(--fg); }
+
+/* === Footer === */
+footer {
+    border-top: 1px solid var(--border-subtle);
+    padding: 2rem 0;
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.8rem;
+    margin-top: 4rem;
+}
+
+/* === Skip Link (Accessibilité) === */
+.skip-link {
+    position: absolute;
+    top: -100%;
+    left: 1rem;
+    background: var(--primary);
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius-inner);
+    font-weight: 600;
+    z-index: 1000;
+    transition: top 0.2s;
+}
+
+.skip-link:focus {
+    top: 0.5rem;
+}
+
+/* === Responsive === */
+@media (max-width: 768px) {
+    .nav-content {
+        padding: 0 1rem;
+    }
+    .nav-links { gap: 1rem; }
+    .container { padding: 0 1rem; }
+    .hero { padding: 3rem 0 2rem; }
+    .search-wrapper {
+        flex-direction: column;
+    }
+    .search-input {
+        padding: 0.75rem 1rem;
+    }
+    .grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* === Visually Hidden (a11y) === */
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0,0,0,0);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* Style du focus pour la navigation au clavier */
+:focus-visible {
+    outline: 3px solid var(--primary);
+    outline-offset: 4px;
+    border-radius: 4px;
+}
+
+/* Skip link : déjà présent dans ton code, assurons-nous qu'il soit bien visible */
+.skip-link:focus {
+    top: 1rem;
+    left: 1rem;
+    background: var(--fg);
+    color: white;
+    padding: 1rem;
+    z-index: 2000;
+}
+.compte {
+    padding: auto;
+    text-align: center;
+}
+
+#connexion:hover {
+    color: blue;
+    font-weight: 500;
+}
+
+/* Container pour les deux barres */
+.search-container-dual {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    align-items: center;
+    margin-top: 2rem;
+}
+
+.search-divider {
+    color: var(--muted);
+    font-weight: 700;
+    font-size: 0.8rem;
+    opacity: 0.6;
+}
+
+/* Sur grand écran, on peut les mettre côte à côte si on veut, 
+   mais en colonne c'est souvent plus clair pour l'accessibilité */
+@media (min-width: 992px) {
+    .search-container-dual {
+        flex-direction: row;
+        justify-content: center;
+        gap: 2rem;
+    }
+}
+
+#retour:hover {
+    color: blue;
+    font-weight: 500;
+}
+
+.symptom-list {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    text-transform: capitalize;
+    letter-spacing: 0.10rem;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-top: 1rem;
+    padding-left: 1.2rem;
+    color: #0d9488;
+}
+
+#title-patho {
+    text-transform: capitalize;
+}
+
+.patho-card {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between; /* Aligne le bouton "Voir les détails" en bas */
+    min-height: 200px; /* Donne une hauteur minimale identique à toutes les cartes */
+    padding: 1.5rem;
+}
+
+.patho-card p {
+    font-size: 0.9rem;
+    color: var(--muted);
+    margin-bottom: 0.5rem;
+}
+
+.details-link {
+    /* Couleur demandée (#0d9488) */
+    color: #0d9488 !important;
+    
+    /* Centrage parfait */
+    display: flex;             /* Active le flexbox */
+    justify-content: center;   /* Centre horizontalement */
+    align-items: center;       /* Centre verticalement */
+    
+    /* Dimensions et espacement */
+    width: 100%;               /* Prend toute la largeur de la carte */
+    height: 40px;              /* Hauteur fixe pour que le centrage vertical soit visible */
+    margin-top: auto;          /* Pousse le lien tout en bas de la carte */
+    
+    /* Style du texte */
+    text-align: center;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.9rem;
+    
+    /* Optionnel : une bordure haute pour séparer du contenu */
+    border-top: 1px solid var(--border-subtle);
+}
+
+.details-link:hover {
+    letter-spacing: 0.05em;
+    opacity: 0.8;
+    color: white !important;
+}

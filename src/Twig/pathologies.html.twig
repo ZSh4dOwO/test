@@ -1,0 +1,53 @@
+{% extends "base.html.twig" %}
+
+{% block body %}
+<section class="hero">
+    <div class="container">
+        <h1 class="l1-title">Les pathologies en acupuncture</h1>
+        <p class="hero-intro">Explorez les pathologies traitées en Médecine Traditionnelle Chinoise.</p>
+
+        <form class="search-wrapper" action="index.php" method="get" aria-label="Filtrer pathologies">
+            <input type="hidden" name="page" value="pathologies">
+
+            <label for="type-filter">Type</label>
+            <select id="type-filter" name="type">
+                <option value="all">Tous</option>
+                {% for type in filters.types %}
+                    <option value="{{ type }}" {% if selectedType == type %}selected{% endif %}>{{ type }}</option>
+                {% endfor %}
+            </select>
+
+            <label for="mer-filter">Méridien</label>
+            <select id="mer-filter" name="mer">
+                <option value="all">Tous</option>
+                {% for mer in filters.meridians %}
+                    <option value="{{ mer.code }}" {% if selectedMer == mer.code %}selected{% endif %}>{{ mer.nom }}</option>
+                {% endfor %}
+            </select>
+
+            <button type="submit" class="btn-primary">Filtrer</button>
+        </form>
+    </div>
+</section>
+
+<section class="featured-results">
+    <div class="container">
+        <h2 class="section-label">Résultats</h2>
+
+        {% if pathologies is not empty %}
+            <div class="grid">
+                {% for patho in pathologies %}
+                    <article class="patho-card" role="article" aria-label="{{ patho.patho_desc }}">
+                        <h3>{{ patho.patho_desc }}</h3>
+                        <p><strong>Type :</strong> {{ patho.type }}</p>
+                        <p><strong>Méridien :</strong> {{ patho.mer_nom }}</p>
+                        <a class="details-link" href="index.php?page=patho&id={{ patho.idp }}">Voir les symptômes</a>
+                    </article>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p>Aucune pathologie ne correspond à ces critères.</p>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

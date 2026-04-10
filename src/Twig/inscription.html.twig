@@ -1,0 +1,39 @@
+{% extends "base.html.twig" %}
+
+{% block body %}
+<section class="hero">
+    <div class="container">
+        <h1 class="l1-title">Créer un compte</h1>
+        <p class="hero-intro">Rejoignez la communauté AAA pour accéder à toutes les pathologies.</p>
+    </div>
+</section>
+
+<section class="featured-results">
+    <div class="container">
+
+        {% if flashMessage %}
+            <p class="flash-message">{{ flashMessage }}</p>
+        {% endif %}
+
+        <form class="search-wrapper" action="index.php" method="post" aria-label="Formulaire d'inscription" style="flex-direction: column; align-items: stretch; gap: 1rem;">
+            <input type="hidden" name="action" value="register">
+
+            <label for="email">Adresse email</label>
+            <input type="email" id="email" name="email" class="search-input" placeholder="votre@email.com" required>
+
+            <label for="password">Mot de passe</label>
+            <input type="password" id="password" name="password" class="search-input" placeholder="Minimum 8 caractères" required>
+
+            <label for="confirm">Confirmer le mot de passe</label>
+            <input type="password" id="confirm" name="confirm" class="search-input" placeholder="Répétez le mot de passe" required>
+
+            <button type="submit" class="btn-primary">S'inscrire</button>
+        </form>
+
+        <p style="margin-top: 1rem;" class="compte">
+            Déjà un compte ? <a href="index.php" id="connexion">Se connecter</a>
+        </p>
+
+    </div>
+</section>
+{% endblock %}
