@@ -2,8 +2,8 @@
 # https://hub.docker.com/_/php
 FROM php:8.2-apache
 
-# Installer l'extension pdo_pgsql ET postgresql-client pour pg_isready
-RUN apt-get update && apt-get install -y libpq-dev postgresql-client && \
+# Installer l'extension pdo_pgsql, postgresql-client pour pg_isready, et dos2unix
+RUN apt-get update && apt-get install -y libpq-dev postgresql-client dos2unix && \
     docker-php-ext-install pdo_pgsql && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
@@ -20,9 +20,9 @@ RUN a2dissite 000-default.conf
 COPY conf/php/site.conf /etc/apache2/sites-available/site.conf
 RUN a2ensite site
 
-# Ajouter le script d'entrypoint
+# Ajouter le script d'entrypoint et corriger les fins de ligne Windows (CRLF → LF)
 COPY conf/php/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
-RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+RUN dos2unix /usr/local/bin/docker-entrypoint.sh && chmod +x /usr/local/bin/docker-entrypoint.sh
 
 # Utiliser le script comme entrypoint
 ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
