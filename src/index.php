@@ -5,11 +5,18 @@ ini_set('session.gc_maxlifetime', 3600); // Session valide 1h côté serveur
 session_set_cookie_params([
     'lifetime' => 0,
     'path'     => '/',
-    'secure'   => false, // true si HTTPS
+    'secure'   => (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on'),
     'httponly' => true,
     'samesite' => 'Lax',
 ]);
 session_start();
+
+// Security headers
+header('X-Content-Type-Options: nosniff');
+header('X-Frame-Options: DENY');
+header('Referrer-Policy: strict-origin-when-cross-origin');
+header('Permissions-Policy: camera=(), microphone=(), geolocation=()');
+header("Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self';");
 require_once __DIR__ . '/../vendor/autoload.php';
 
 $loader = new \Twig\Loader\FilesystemLoader(__DIR__ . '/Twig');
@@ -52,14 +59,17 @@ function ensureUserTable(): void
         )'
     );
 
+    $adminEmail = getenv('APP_ADMIN_EMAIL') ?: 'admin@aaa.local';
+    $adminPassword = getenv('APP_ADMIN_PASSWORD') ?: 'Acupuncture123!';
+
     $stmt = $pdo->prepare('SELECT 1 FROM app_user WHERE email = :email');
-    $stmt->execute([':email' => 'admin@aaa.local']);
+    $stmt->execute([':email' => $adminEmail]);
 
     if (!$stmt->fetch()) {
-        $passwordHash = password_hash('Acupuncture123!', PASSWORD_DEFAULT);
+        $passwordHash = password_hash($adminPassword, PASSWORD_DEFAULT);
         $insert = $pdo->prepare('INSERT INTO app_user (email, password) VALUES (:email, :password)');
         $insert->execute([
-            ':email' => 'admin@aaa.local',
+            ':email' => $adminEmail,
             ':password' => $passwordHash
         ]);
     }
@@ -122,6 +132,22 @@ function getFlash(): ?string
     unset($_SESSION['flash_message']);
 
     return $message;
+}
+
+function generateCsrfToken(): string
+{
+    if (empty($_SESSION['csrf_token'])) {
+        $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+    }
+    return $_SESSION['csrf_token'];
+}
+
+function validateCsrfToken(?string $token): bool
+{
+    if (empty($token) || empty($_SESSION['csrf_token'])) {
+        return false;
+    }
+    return hash_equals($_SESSION['csrf_token'], $token);
 }
 
 function getFilters(): array
@@ -302,10 +328,16 @@ function searchPathoByKeyword(string $term): array
 try {
     ensureUserTable();
 } catch (Exception $e) {
-        // ignore
+    error_log('DB init error: ' . $e->getMessage());
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (!validateCsrfToken($_POST['csrf_token'] ?? null)) {
+        flash('Session expirée, veuillez réessayer.');
+        header('Location: index.php');
+        exit;
+    }
+
     if (isset($_POST['action']) && $_POST['action'] === 'register') {
         $email = trim($_POST['email'] ?? '');
         $password = trim($_POST['password'] ?? '');
@@ -337,6 +369,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         try {
             if (registerUser($email, $password)) {
+                session_regenerate_id(true);
                 $_SESSION['user_email'] = $email;
                 flash("Inscription réussie, bienvenue !");
                 header('Location: index.php?page=pathologies');
@@ -364,13 +397,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         try {
             if (authenticateUser($email, $password)) {
+                session_regenerate_id(true);
                 $_SESSION['user_email'] = $email;
                 flash('Connexion réussie.');
                 header('Location: index.php?page=pathologies');
                 exit;
             }
         } catch (Exception $e) {
-            // ignore
+            error_log('Login error: ' . $e->getMessage());
         }
 
         flash('Identifiants invalides.');
@@ -390,11 +424,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $page = $_GET['page'] ?? 'accueil';
 $flashMessage = getFlash();
 
+$csrfToken = generateCsrfToken();
+
 $params = [
     'currentPage' => $page,
     'isAuthenticated' => isAuthenticated(),
     'userEmail' => currentUser(),
     'flashMessage' => $flashMessage,
+    'csrfToken' => $csrfToken,
 ];
 
 switch ($page) {

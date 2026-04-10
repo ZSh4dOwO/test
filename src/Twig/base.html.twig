@@ -34,6 +34,7 @@
                 {% if isAuthenticated %}
                     <form method="post" style="display:inline;" aria-label="Déconnexion">
                         <input type="hidden" name="action" value="logout">
+                        <input type="hidden" name="csrf_token" value="{{ csrfToken }}">
                         <button class="btn-login" type="submit">Déconnexion ({{ userEmail }})</button>
                     </form>
                 {% else %}
@@ -64,6 +65,7 @@
             <h2 id="modal-title">Connexion</h2>
             <form method="post" action="index.php" aria-label="Formulaire de connexion">
                 <input type="hidden" name="action" value="login">
+                <input type="hidden" name="csrf_token" value="{{ csrfToken }}">
                 <div class="form-group"><label for="login-email">Email</label><input type="email" id="login-email" name="email" required></div>
                 <div class="form-group"><label for="login-password">Mot de passe</label><input type="password" id="login-password" name="password" required></div>
                 <button type="submit" class="btn-submit">Se connecter</button>
