@@ -2,23 +2,14 @@
 
 ini_set('session.cookie_lifetime', 0); // Cookie valide jusqu'à fermeture du navigateur
 ini_set('session.gc_maxlifetime', 3600); // Session valide 1h côté serveur
-$isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
-        || (!empty($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https');
 session_set_cookie_params([
     'lifetime' => 0,
     'path'     => '/',
-    'secure'   => $isHttps,
+    'secure'   => false, // true si HTTPS
     'httponly' => true,
     'samesite' => 'Lax',
 ]);
 session_start();
-
-// Security headers
-header('X-Content-Type-Options: nosniff');
-header('X-Frame-Options: DENY');
-header('Referrer-Policy: strict-origin-when-cross-origin');
-header('Permissions-Policy: camera=(), microphone=(), geolocation=()');
-header("Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self';");
 require_once __DIR__ . '/../vendor/autoload.php';
 
 $loader = new \Twig\Loader\FilesystemLoader(__DIR__ . '/Twig');
@@ -49,7 +40,7 @@ function getDbConnection(): PDO
     return $pdo;
 }
 
-function ensureUserTable(): void
+function ensureUserTables(): void
 {
     $pdo = getDbConnection();
 
@@ -57,56 +48,184 @@ function ensureUserTable(): void
         'CREATE TABLE IF NOT EXISTS app_user (
             id SERIAL PRIMARY KEY,
             email VARCHAR(255) NOT NULL UNIQUE,
-            password VARCHAR(255) NOT NULL
+            password VARCHAR(255) NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )'
     );
 
-    $adminEmail = getenv('APP_ADMIN_EMAIL') ?: 'admin@aaa.local';
-    $adminPassword = getenv('APP_ADMIN_PASSWORD') ?: 'Acupuncture123!';
+    $pdo->exec(
+        'CREATE TABLE IF NOT EXISTS remember_token (
+            id SERIAL PRIMARY KEY,
+            user_id INTEGER NOT NULL REFERENCES app_user(id) ON DELETE CASCADE,
+            selector VARCHAR(32) NOT NULL UNIQUE,
+            hashed_validator VARCHAR(255) NOT NULL,
+            expires_at TIMESTAMP NOT NULL
+        )'
+    );
 
-    $stmt = $pdo->prepare('SELECT 1 FROM app_user WHERE email = :email');
-    $stmt->execute([':email' => $adminEmail]);
+    // $stmt = $pdo->prepare('SELECT 1 FROM app_user WHERE email = :email');
+    // $stmt->execute([':email' => 'admin@aaa.local']);
 
-    if (!$stmt->fetch()) {
-        $passwordHash = password_hash($adminPassword, PASSWORD_DEFAULT);
-        $insert = $pdo->prepare('INSERT INTO app_user (email, password) VALUES (:email, :password)');
-        $insert->execute([
-            ':email' => $adminEmail,
-            ':password' => $passwordHash
-        ]);
-    }
+    // if (!$stmt->fetch()) {
+    //     $passwordHash = password_hash('Acupuncture123!', PASSWORD_DEFAULT);
+    //     $insert = $pdo->prepare('INSERT INTO app_user (email, password) VALUES (:email, :password)');
+    //     $insert->execute([
+    //         ':email' => 'admin@aaa.local',
+    //         ':password' => $passwordHash
+    //     ]);
+    // }
 }
 
-function authenticateUser(string $email, string $password): bool
+function findUserByEmail(string $email): ?array
 {
     $pdo = getDbConnection();
 
-    $stmt = $pdo->prepare('SELECT password FROM app_user WHERE email = :email');
+    $stmt = $pdo->prepare('SELECT id, email, password FROM app_user WHERE email = :email');
     $stmt->execute([':email' => $email]);
-    $row = $stmt->fetch();
+    $user = $stmt->fetch();
 
-    if (!$row) {
-        return false;
+    return $user ?: null;
+}
+
+function authenticateUser(string $email, string $password): ?array
+{
+    $user = findUserByEmail($email);
+
+    if (!$user) {
+        return null;
     }
 
-    return password_verify($password, $row['password']);
+    if (!password_verify($password, $user['password'])) {
+        return null;
+    }
+
+    return $user;
 }
 
 function registerUser(string $email, string $password): bool
 {
     $pdo = getDbConnection();
 
-    $stmt = $pdo->prepare('SELECT 1 FROM app_user WHERE email = :email');
-    $stmt->execute([':email' => $email]);
-    if ($stmt->fetch()) {
-        return false; // Email déjà utilisé
+    if (findUserByEmail($email)) {
+        return false;
     }
 
     $passwordHash = password_hash($password, PASSWORD_DEFAULT);
-    $insert = $pdo->prepare('INSERT INTO app_user (email, password) VALUES (:email, :password)');
-    $insert->execute([':email' => $email, ':password' => $passwordHash]);
+
+    $stmt = $pdo->prepare('
+        INSERT INTO app_user (email, password)
+        VALUES (:email, :password)
+    ');
+
+    $stmt->execute([
+        ':email' => $email,
+        ':password' => $passwordHash
+    ]);
 
     return true;
+}
+
+function createRememberMeToken(int $userId): void
+{
+    $pdo = getDbConnection();
+
+    $selector = bin2hex(random_bytes(8));
+    $validator = bin2hex(random_bytes(32));
+    $hashedValidator = password_hash($validator, PASSWORD_DEFAULT);
+
+    $expiresAt = (new DateTime('+30 days'))->format('Y-m-d H:i:s');
+
+    $stmt = $pdo->prepare('
+        INSERT INTO remember_token (user_id, selector, hashed_validator, expires_at)
+        VALUES (:user_id, :selector, :hashed_validator, :expires_at)
+    ');
+
+    $stmt->execute([
+        ':user_id' => $userId,
+        ':selector' => $selector,
+        ':hashed_validator' => $hashedValidator,
+        ':expires_at' => $expiresAt,
+    ]);
+
+    $cookieValue = $selector . ':' . $validator;
+
+    setcookie('remember_me', $cookieValue, [
+        'expires'  => time() + 60 * 60 * 24 * 30,
+        'path'     => '/',
+        'secure'   => false, // mettre true en HTTPS
+        'httponly' => true,
+        'samesite' => 'Lax',
+    ]);
+}
+
+
+function loginFromRememberMe(): void
+{
+    if (isset($_SESSION['user_email'])) {
+        return;
+    }
+
+    if (empty($_COOKIE['remember_me'])) {
+        return;
+    }
+
+    $parts = explode(':', $_COOKIE['remember_me'], 2);
+    if (count($parts) !== 2) {
+        return;
+    }
+
+    [$selector, $validator] = $parts;
+
+    $pdo = getDbConnection();
+
+    $stmt = $pdo->prepare('
+        SELECT rt.id, rt.user_id, rt.hashed_validator, rt.expires_at, u.email
+        FROM remember_token rt
+        JOIN app_user u ON u.id = rt.user_id
+        WHERE rt.selector = :selector
+        LIMIT 1
+    ');
+    $stmt->execute([':selector' => $selector]);
+    $row = $stmt->fetch();
+
+    if (!$row) {
+        return;
+    }
+
+    if (strtotime($row['expires_at']) < time()) {
+        deleteRememberMeToken($selector);
+        return;
+    }
+
+    if (!password_verify($validator, $row['hashed_validator'])) {
+        deleteRememberMeToken($selector);
+        return;
+    }
+
+    $_SESSION['user_email'] = $row['email'];
+    $_SESSION['user_id'] = $row['user_id'];
+
+    deleteRememberMeToken($selector);
+    createRememberMeToken((int)$row['user_id']);
+}
+
+
+function deleteRememberMeToken(?string $selector = null): void
+{
+    $pdo = getDbConnection();
+
+    if ($selector !== null) {
+        $stmt = $pdo->prepare('DELETE FROM remember_token WHERE selector = :selector');
+        $stmt->execute([':selector' => $selector]);
+    }
+
+    setcookie('remember_me', '', [
+        'expires'  => time() - 3600,
+        'path'     => '/',
+        'secure'   => false,
+        'httponly' => true,
+        'samesite' => 'Lax',
+    ]);
 }
 
 function currentUser(): ?string
@@ -117,22 +236,6 @@ function currentUser(): ?string
 function isAuthenticated(): bool
 {
     return currentUser() !== null;
-}
-
-function generateCsrfToken(): string
-{
-    if (empty($_SESSION['csrf_token'])) {
-        $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
-    }
-    return $_SESSION['csrf_token'];
-}
-
-function validateCsrfToken(?string $token): bool
-{
-    if (empty($_SESSION['csrf_token']) || empty($token)) {
-        return false;
-    }
-    return hash_equals($_SESSION['csrf_token'], $token);
 }
 
 function flash(string $message): void
@@ -328,67 +431,12 @@ function searchPathoByKeyword(string $term): array
 }
 
 try {
-    ensureUserTable();
+    ensureUserTables();
 } catch (Exception $e) {
-    error_log('DB init error: ' . $e->getMessage());
+        // ignore
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    if (!validateCsrfToken($_POST['csrf_token'] ?? null)) {
-        flash('Session expirée, veuillez réessayer.');
-        header('Location: index.php');
-        exit;
-    }
-    // Regenerate CSRF token after successful validation
-    unset($_SESSION['csrf_token']);
-
-    if (isset($_POST['action']) && $_POST['action'] === 'register') {
-        $email = trim($_POST['email'] ?? '');
-        $password = trim($_POST['password'] ?? '');
-        $confirm = trim($_POST['confirm'] ?? '');
-
-        if ($email === '' || $password === '' || $confirm === '') {
-            flash("Veuillez remplir tous les champs.");
-            header('Location: index.php?page=inscription');
-            exit;
-        }
-
-        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            flash("Adresse email invalide.");
-            header('Location: index.php?page=inscription');
-            exit;
-        }
-
-        if ($password !== $confirm) {
-            flash("Les mots de passe ne correspondent pas.");
-            header('Location: index.php?page=inscription');
-            exit;
-        }
-
-        if (strlen($password) < 8) {
-            flash("Le mot de passe doit contenir au moins 8 caractères.");
-            header('Location: index.php?page=inscription');
-            exit;
-        }
-
-        try {
-            if (registerUser($email, $password)) {
-                session_regenerate_id(true);
-                $_SESSION['user_email'] = $email;
-                flash("Inscription réussie, bienvenue !");
-                header('Location: index.php?page=pathologies');
-                exit;
-            } else {
-                flash("Cet email est déjà utilisé.");
-                header('Location: index.php?page=inscription');
-                exit;
-            }
-        } catch (Exception $e) {
-            flash("Erreur lors de l'inscription.");
-            header('Location: index.php?page=inscription');
-            exit;
-        }
-    }
     if (isset($_POST['action']) && $_POST['action'] === 'login') {
         $email = trim($_POST['email'] ?? '');
         $password = trim($_POST['password'] ?? '');
@@ -401,14 +449,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         try {
             if (authenticateUser($email, $password)) {
-                session_regenerate_id(true);
                 $_SESSION['user_email'] = $email;
                 flash('Connexion réussie.');
                 header('Location: index.php?page=pathologies');
                 exit;
             }
         } catch (Exception $e) {
-            error_log('Login error: ' . $e->getMessage());
+            // ignore
         }
 
         flash('Identifiants invalides.');
@@ -416,9 +463,56 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
+    if (isset($_POST['action']) && $_POST['action'] === 'login') {
+    $email = trim($_POST['email'] ?? '');
+    $password = trim($_POST['password'] ?? '');
+    $remember = isset($_POST['remember']);
+
+    if ($email === '' || $password === '') {
+        flash("Veuillez renseigner l'email et le mot de passe.");
+        header('Location: index.php');
+        exit;
+    }
+
+    try {
+        $user = authenticateUser($email, $password);
+
+        if ($user) {
+            $_SESSION['user_email'] = $user['email'];
+            $_SESSION['user_id'] = $user['id'];
+
+            if ($remember) {
+                createRememberMeToken((int)$user['id']);
+            }
+
+            flash('Connexion réussie.');
+            header('Location: index.php?page=pathologies');
+            exit;
+        }
+    } catch (Exception $e) {
+        // ignore
+    }
+
+    flash('Identifiants invalides.');
+    header('Location: index.php');
+    exit;
+}
+
+
+
+
     if (isset($_POST['action']) && $_POST['action'] === 'logout') {
+        if (!empty($_COOKIE['remember_me'])) {
+            $parts = explode(':', $_COOKIE['remember_me'], 2);
+            if (count($parts) === 2) {
+                deleteRememberMeToken($parts[0]);
+            }
+        }
+
+        session_unset();
         session_destroy();
         session_start();
+
         flash('Déconnexion effectuée.');
         header('Location: index.php');
         exit;
@@ -428,41 +522,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $page = $_GET['page'] ?? 'accueil';
 $flashMessage = getFlash();
 
-$csrfToken = generateCsrfToken();
-
 $params = [
     'currentPage' => $page,
     'isAuthenticated' => isAuthenticated(),
     'userEmail' => currentUser(),
     'flashMessage' => $flashMessage,
-    'csrfToken' => $csrfToken,
 ];
 
 switch ($page) {
-    case 'pathologies':
-        $filterType = $_GET['type'] ?? 'all';
-        $filterMer = $_GET['mer'] ?? 'all';
-
-        $params['pathologies'] = getPathologies($filterType, $filterMer);
-        $params['filters'] = getFilters();
-        $params['selectedType'] = $filterType;
-        $params['selectedMer'] = $filterMer;
-
-        echo $twig->render('pathologies.html.twig', $params);
-        break;
-
     case 'patho':
         $idP = intval($_GET['id'] ?? 0);
         $patho = getPathoDetail($idP);
-
         if (!$patho) {
-            flash('Pathologie non trouvée.');
-            header('Location: index.php?page=pathologies');
+            header('Location: index.php?page=accueil');
             exit;
         }
-
         $params['patho'] = $patho;
-
         echo $twig->render('patho.html.twig', $params);
         break;
 
@@ -471,12 +546,29 @@ switch ($page) {
         break;
     case 'accueil':
     default:
+        // 1. On récupère TOUJOURS les listes pour les menus déroulants (Type/Méridien)
+        $params['filters'] = getFilters(); 
+
+        // 2. On récupère les entrées de l'utilisateur
         $term = trim($_GET['keyword'] ?? '');
+        $filterType = $_GET['type'] ?? 'all';
+        $filterMer = $_GET['mer'] ?? 'all';
 
         $params['keyword'] = $term;
-        $params['homePathologies'] = getPathologies('all', 'all');
-        $params['searchResults'] = $term !== '' ? searchPathoByKeyword($term) : [];
+        $params['selectedType'] = $filterType;
+        $params['selectedMer'] = $filterMer;
+
+        // 3. Logique d'affichage
+        if ($term !== '') {
+            // Si l'utilisateur a tapé un mot-clé
+            $params['searchResults'] = searchPathoByKeyword($term);
+        } else {
+            // Sinon, on affiche soit tout, soit les résultats filtrés par Type/Méridien
+            $params['homePathologies'] = getPathologies($filterType, $filterMer);
+            $params['searchResults'] = [];
+        }
 
         echo $twig->render('index.html.twig', $params);
         break;
+            
 }

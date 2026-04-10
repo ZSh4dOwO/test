@@ -36,19 +36,3 @@ document.addEventListener('keydown', function(e) {
 
 // La navigation est 100% fonctionnelle côté serveur.
 // Le JavaScript fournit uniquement l'ouverture/fermeture des modales et l'accessibilité.
-
-// === Recherche/filtrage côté client (progressive enhancement) ===
-function filterCards(type, btn) {
-    document.querySelectorAll('.filter-btn').forEach(function(b) { b.classList.remove('active'); });
-    btn.classList.add('active');
-    document.querySelectorAll('.patho-card').forEach(function(card) {
-        if (type === 'all') {
-            card.style.display = '';
-        } else {
-            card.style.display = card.dataset.type === type ? '' : 'none';
-        }
-    });
-}
-
-
-

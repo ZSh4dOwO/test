@@ -2516,7 +2516,6 @@ INSERT INTO public.symptPatho(idS, idP, aggr) VALUES
 (447, 112, false),
 (448, 113, false)
 ;
-
 --
 -- Table de gestion des utilisateurs pour le module d'authentification
 --
@@ -2530,3 +2529,4 @@ CREATE TABLE public.app_user (
 INSERT INTO public.app_user (email, password) VALUES
 ('admin@aaa.local', '$2y$10$w9/YJ1dQmI4R1cR4671Xju8hCunHxOKOQ0mJq8.Q6S9x7z8dI5Swu');
 -- mot de passe : Acupuncture123! (hashed)
+

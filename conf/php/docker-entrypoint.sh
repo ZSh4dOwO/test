@@ -15,7 +15,7 @@ echo "Attente de la disponibilité de PostgreSQL sur $DB_HOST:$DB_PORT..."
 # Boucle d'attente jusqu'à 30 secondes
 for i in {1..30}; do
     if pg_isready -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_DB" > /dev/null 2>&1; then
-        echo "✓ PostgreSQL est maintenant prêt!"
+        echo "✓ PostgreSQL est maintain!"
         break
     fi
     

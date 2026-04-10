@@ -39,7 +39,8 @@
                 {% for patho in pathologies %}
                     <article class="patho-card" role="article" aria-label="{{ patho.patho_desc }}">
                         <h3>{{ patho.patho_desc }}</h3>
-                        <p> - Type : {{ patho.type }} <br> - Méridien : {{ patho.mer_nom }}</p>
+                        <p><strong>Type :</strong> {{ patho.type }}</p>
+                        <p><strong>Méridien :</strong> {{ patho.mer_nom }}</p>
                         <a class="details-link" href="index.php?page=patho&id={{ patho.idp }}">Voir les symptômes</a>
                     </article>
                 {% endfor %}

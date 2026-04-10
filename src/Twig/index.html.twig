@@ -4,24 +4,41 @@
 <section class="hero">
     <div class="container">
         <h1 class="l1-title">L'acupuncture accessible à tous.</h1>
-        <p class="hero-intro">L'Association des Acupuncteurs soucieux de l'Accessibilité (AAA) conjugue savoirs ancestraux et clarté moderne.</p>
         
-        {# On ajoute role="search" pour les lecteurs d'écran #}
-        <form class="search-wrapper" action="index.php" method="get" role="search" aria-label="Recherche par mot-clé">
-            <input type="hidden" name="page" value="accueil">
-            
-            {# Le label est caché visuellement par .sr-only mais lu par les machines #}
-            <label for="search-input" class="sr-only">Rechercher une pathologie ou un symptôme</label>
-            <input 
-                type="text" 
-                id="search-input" 
-                name="keyword" 
-                class="search-input" 
-                placeholder="Rechercher une pathologie ou symptôme..." 
-                value="{{ keyword|default('') }}"
-            >
-            <button type="submit" class="btn-primary">Rechercher</button>
-        </form>
+        <div class="search-container-dual">
+            {# Formulaire 1 : Recherche par mot-clé #}
+            <form class="search-wrapper" action="index.php" method="get" role="search">
+                <input type="hidden" name="page" value="accueil">
+                <label for="search-input" class="sr-only">Rechercher par mot-clé</label>
+                <input type="text" id="search-input" name="keyword" class="search-input" placeholder="Ex: Migraine, Dos..." value="{{ keyword|default('') }}">
+                <button type="submit" class="btn-primary">Rechercher</button>
+            </form>
+
+            <span class="search-divider">OU</span>
+
+            {# Formulaire 2 : Recherche par filtres #}
+            <form class="search-wrapper" action="index.php" method="get">
+                <input type="hidden" name="page" value="accueil">
+                
+                <label for="type-filter" class="sr-only">Type</label>
+                <select id="type-filter" name="type" class="search-input" style="flex: 1;">
+                    <option value="all">Tous les types</option>
+                    {% for type in filters.types %}
+                        <option value="{{ type }}" {% if selectedType == type %}selected{% endif %}>{{ type }}</option>
+                    {% endfor %}
+                </select>
+
+                <label for="mer-filter" class="sr-only">Méridien</label>
+                <select id="mer-filter" name="mer" class="search-input" style="flex: 1;">
+                    <option value="all">Tous les méridiens</option>
+                    {% for mer in filters.meridians %}
+                        <option value="{{ mer.code }}" {% if selectedMer == mer.code %}selected{% endif %}>{{ mer.nom }}</option>
+                    {% endfor %}
+                </select>
+
+                <button type="submit" class="btn-primary">Filtrer</button>
+            </form>
+        </div>
     </div>
 </section>
 
@@ -39,7 +56,6 @@
                             <p class="symptoms"><strong>Symptômes :</strong> {{ patho.symptoms }}</p>
                         {% endif %}
 
-                        {# Un lien clair pour la navigation Tab + Entrée #}
                         <a class="details-link" href="index.php?page=patho&id={{ patho.idp }}" aria-label="Voir les détails de {{ patho.patho_desc }}">
                             Voir les détails
                         </a>
@@ -62,9 +78,11 @@
                 {% for patho in homePathologies|slice(0, 12) %}
                     <article class="patho-card">
                         <h3>{{ patho.patho_desc }}</h3>
-                        <p> - Type : {{ patho.type }} <br> - Méridien : {{ patho.mer_nom }}</p>
-                        <a href="index.php?page=patho&id={{ patho.idp }}" class="details-link" aria-label="Voir détail de {{ patho.patho_desc }}">
-                            Voir détail
+                        <p><strong>Type :</strong> {{ patho.type }}</p>
+                        <p><strong>Méridien :</strong> {{ patho.mer_nom }}</p>
+                        {# CORRECTION ICI : "Voir les détails" et lien vérifié #}
+                        <a href="index.php?page=patho&id={{ patho.idp }}" class="details-link" aria-label="Voir les détails de {{ patho.patho_desc }}">
+                            Voir les détails
                         </a>
                     </article>
                 {% else %}
