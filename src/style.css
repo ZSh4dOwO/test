@@ -494,6 +494,47 @@ img { max-width: 100%; display: block; }
     color: var(--primary);
 }
 
+/* === Flash Messages === */
+.flash-message {
+    max-width: 1100px;
+    margin: 1rem auto;
+    padding: 0.75rem 1.5rem;
+    background: var(--primary-light);
+    color: var(--primary);
+    border: 1px solid var(--primary);
+    border-radius: var(--radius-inner);
+    font-size: 0.9rem;
+    font-weight: 500;
+    text-align: center;
+}
+
+/* === Details Link === */
+.details-link {
+    display: inline-block;
+    margin-top: 0.75rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--primary);
+    transition: color 0.2s;
+}
+
+.details-link:hover {
+    color: var(--primary-hover);
+}
+
+/* === Symptom List === */
+.symptom-list {
+    list-style: disc;
+    padding-left: 1.5rem;
+}
+
+.symptom-list li {
+    font-size: 0.95rem;
+    margin-bottom: 0.5rem;
+    color: var(--fg);
+    line-height: 1.6;
+}
+
 /* === Footer === */
 footer {
     border-top: 1px solid var(--border-subtle);
