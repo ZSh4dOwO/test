@@ -2012,21 +2012,7 @@ INSERT INTO public.symptPatho(idS, idP, aggr) VALUES
 (26, 48, false),
 (27, 17, false),
 (28, 81, false),
-(29, 46, false);
-
---
--- Table de gestion des utilisateurs pour le module d'authentification
---
-DROP TABLE IF EXISTS public.app_user;
-CREATE TABLE public.app_user (
-  id SERIAL PRIMARY KEY,
-  email VARCHAR(255) NOT NULL UNIQUE,
-  password VARCHAR(255) NOT NULL
-);
-
-INSERT INTO public.app_user (email, password) VALUES
-('admin@aaa.local', '$2y$10$w9/YJ1dQmI4R1cR4671Xju8hCunHxOKOQ0mJq8.Q6S9x7z8dI5Swu');
--- mot de passe : Acupuncture123! (hashed)
+(29, 46, false),
 (30, 57, false),
 (31, 95, false),
 (32, 12, false),
@@ -2530,3 +2516,17 @@ INSERT INTO public.app_user (email, password) VALUES
 (447, 112, false),
 (448, 113, false)
 ;
+
+--
+-- Table de gestion des utilisateurs pour le module d'authentification
+--
+DROP TABLE IF EXISTS public.app_user;
+CREATE TABLE public.app_user (
+  id SERIAL PRIMARY KEY,
+  email VARCHAR(255) NOT NULL UNIQUE,
+  password VARCHAR(255) NOT NULL
+);
+
+INSERT INTO public.app_user (email, password) VALUES
+('admin@aaa.local', '$2y$10$w9/YJ1dQmI4R1cR4671Xju8hCunHxOKOQ0mJq8.Q6S9x7z8dI5Swu');
+-- mot de passe : Acupuncture123! (hashed)
