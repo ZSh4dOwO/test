@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <!-- Standard Meta -->
+        <meta charset="utf-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+
+        <!-- Site Properties -->
+        <title>Grid Example - Semantic</title>
+
+        <link rel="stylesheet" type="text/css" href="./lib/Semantic-UI-CSS-master/semantic.min.css">
+        <link rel="stylesheet" type="text/css" href="css/custom.css">
+
+    </head>
+
+    <body>
+        <div class="ui clearing segment bg-wood2">
+            <h3 class="ui right floated header">
+                <a href="formUser.html">
+                    <i class="plus icon"></i>
+                </a>
+            </h3>
+            <h3 class="ui right floated header">
+                <a href="loginUser.html">
+                    <i class="user circle outline icon"></i>
+                </a>
+                <div class="content">
+                    <span id="userNameId">Default UserName</span>
+                    <div class="sub header"><span id="walletId">9999</span>$</div>
+                </div>
+            </h3>
+
+            <h3 class="ui left floated header">
+                    <i class="money icon"></i>
+                <div class="content">
+                    Home
+                    <div class="sub header">Select your action</div>
+                </div>
+            </h3>
+
+        </div>
+
+
+        <div class="ui grid ">
+            <div class="row"></div>
+
+            <div class="row">
+            <div class=" one wide column"></div>
+            <div class=" four wide column">
+            <a class="ui  massive  button" href="cardList-market-sell.html">
+                <i class="dollar sign icon"></i>
+                Sell
+            </a>
+            </div>
+            <div class=" one wide column"></div>
+            <div class=" four wide column">
+                <a class="ui  massive  button" href="cardList-market-buy.html">
+                <i class="shopping cart icon"></i>
+                Buy
+                </a>
+            </div>
+            <div class=" one wide column"></div>
+              <div class=" four wide column">
+                    <a class="ui  massive  button" href="roomSelection.html">
+                        <i class="space shuttle icon"></i>
+                        Play
+                    </a>
+                </div>
+            </div>
+            <div class=" one wide column"></div>
+        </div>
+        </div>
+
+        <script src="./lib/jquery-3.3.1.min.js"></script>
+        <script src="./lib/Semantic-UI-CSS-master/semantic.js"></script>
+        <script src="./js/home.js" defer></script>     
+    
+    </body>
+</html>

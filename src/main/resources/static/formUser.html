@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <!-- Standard Meta -->
+        <meta charset="utf-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+
+        <!-- Site Properties -->
+        <title>Grid Example - Semantic</title>
+
+        <link rel="stylesheet" type="text/css" href="./lib/Semantic-UI-CSS-master/semantic.min.css">
+        <link rel="stylesheet" type="text/css" href="css/custom.css">
+
+    </head>
+
+    <body>
+        <div class="ui clearing segment bg-wood2">
+            <h3 class="ui right floated header">
+                <i class="user circle outline icon"></i>
+            </h3>
+
+            <h3 class="ui left floated header">
+                <a href="home.html">
+                <i class="home icon"></i>
+                <div class="content">
+                    Home
+                    <div class="sub header">
+                        
+                        <p>Add an user</p>
+
+                        
+                    </div>
+                </div>
+            </a>
+            </h3>
+        </div>
+
+
+        <div class="ui grid bg-wood">
+            <div class=" three wide column"></div>
+                <div class=" ten wide column">
+                    <form class="ui form">
+                      <div class="field">
+                        <label>First Name</label>
+                        <input type="text" name="first-name" placeholder="First Name">
+                      </div>
+                      <div class="field">
+                        <label>Last Name</label>
+                        <input type="text" name="last-name" placeholder="Last Name">
+                      </div>
+                      <div class="field">
+                        <label>Password</label>
+                        <input type="password" name="password" placeholder="Your Password">
+                      </div>
+                      <div class="field">
+                        <label>Re-Password</label>
+                        <input type="password" name="re-password" placeholder="Your Password Again">
+                      </div>
+                      <div class="field">
+                        <div class="ui checkbox">
+                          <input type="checkbox" tabindex="0" onchange="check(this)">
+                          <label>I agree to the Terms and Conditions</label>
+                        </div>
+                      </div>
+                      <button class="ui button" type="button" onclick="process(this)">Submit</button>
+                    </form>
+                </div>
+            <div class=" three wide column"></div>
+        </div>
+
+        <script src="./lib/jquery-3.3.1.min.js"></script>
+        <script src="./lib/Semantic-UI-CSS-master/semantic.js"></script>
+        <script src="./js/tools.js" ></script>     
+        <script src="./js/userform.js" ></script>     
+    
+    </body>
+</html>
